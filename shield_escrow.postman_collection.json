@@ -1,0 +1,607 @@
+{
+    "info": {
+        "_postman_id": "c0f74c95-0bef-4132-9df3-9084e1a3fab2",
+        "name": "ShieldEscrow API",
+        "description": "# ShieldEscrow API Documentation\n\nWelcome to the ShieldEscrow API. This API provides a headless escrow infrastructure for Nigeria, enabling platforms to integrate secure milestone-based payments, disputes, and vendor payouts.\n\n## Getting Started\n\n1.  **Register Platform**: Call `POST /auth/register` to create your tenant account and get an API Key.\n2.  **Configure Environment**: Set your `base_url` (default: `http://localhost:3000/v1`) and `tenant_id`.\n3.  **Start Creating Escrows**: Use `Create Escrow` with your own `platform_user_id`s. We handle user creation automatically.\n\n## Key Features\n\n*   **Escrow Transactions**: Create, manage, and release escrow funds.\n*   **Milestones**: Break down large projects into trackable milestones.\n*   **Disputes**: Built-in evidence upload and dispute resolution flow.\n*   **Webhooks**: Listen for real-time events like `escrow.funded` and `escrow.released`.\n*   **Vendor Payouts**: Manage vendor ledgers and withdraw to Nigerian bank accounts.",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+        {
+            "name": "Platform & Auth",
+            "description": "Endpoints for platform registration, key management, and statistics.",
+            "item": [
+                {
+                    "name": "Register Platform",
+                    "request": {
+                        "method": "POST",
+                        "header": [],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"name\": \"My E-commerce Platform\",\n    \"webhook_url\": \"https://myplatform.com/webhooks/shield\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/auth/register",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "auth",
+                                "register"
+                            ]
+                        },
+                        "description": "Registers a new Platform (Tenant) on ShieldEscrow.\n\n**Body Parameters:**\n*   `name`: Name of your platform.\n*   `webhook_url`: The URL where you want to receive webhook events from ShieldEscrow.\n\n**Response:**\nReturns your `id` (Tenant ID) and `api_key`. **Save the API Key securely**; it is only shown once."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Register User (Optional Explicit)",
+                    "request": {
+                        "method": "POST",
+                        "header": [],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"tenant_id\": \"{{tenant_id}}\",\n    \"platform_user_id\": \"USER_123\",\n    \"email\": \"user@example.com\",\n    \"role\": \"vendor\",\n    \"name\": \"John Doe\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/users/create",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "users",
+                                "create"
+                            ]
+                        },
+                        "description": "Explicitly creates a user.\n\n**Note**: You usually don't need this. `Create Escrow` creates users automatically if they don't exist."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Rotate Keys",
+                    "request": {
+                        "method": "POST",
+                        "header": [],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"tenant_id\": \"{{tenant_id}}\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/auth/rotate-keys",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "auth",
+                                "rotate-keys"
+                            ]
+                        },
+                        "description": "Rotates the API Key for a given Tenant ID.\n\n**Body Parameters:**\n*   `tenant_id`: The UUID of the tenant."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Stats",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/platform/stats?tenant_id={{tenant_id}}",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "platform",
+                                "stats"
+                            ],
+                            "query": [
+                                {
+                                    "key": "tenant_id",
+                                    "value": "{{tenant_id}}",
+                                    "description": "The UUID of the tenant to fetch stats for."
+                                }
+                            ]
+                        },
+                        "description": "Retrieves aggregate statistics for the platform."
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "Transaction Management",
+            "description": "Core endpoints for creating and managing escrow transactions.",
+            "item": [
+                {
+                    "name": "Create Escrow (Simple)",
+                    "request": {
+                        "method": "POST",
+                        "header": [],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"tenant_id\": \"{{tenant_id}}\",\n    \"buyer_platform_id\": \"USER_BUYER_001\",\n    \"buyer_email\": \"buyer@example.com\",\n    \"vendor_platform_id\": \"USER_VENDOR_001\",\n    \"vendor_email\": \"vendor@example.com\",\n    \"amount\": 50000,\n    \"description\": \"iPhone 13 Pro Max - Mint Condition\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/escrow/create",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "escrow",
+                                "create"
+                            ]
+                        },
+                        "description": "Initializes a basic Escrow Transaction."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Create Escrow (with Milestones)",
+                    "request": {
+                        "method": "POST",
+                        "header": [],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"tenant_id\": \"{{tenant_id}}\",\n    \"buyer_platform_id\": \"USER_BUYER_MS\",\n    \"vendor_platform_id\": \"USER_VENDOR_MS\",\n    \"amount\": 100000,\n    \"description\": \"Website Development Project\",\n    \"milestones\": [\n        {\n            \"description\": \"Initial Design Draft\",\n            \"amount\": 30000\n        },\n        {\n            \"description\": \"Frontend Implementation\",\n            \"amount\": 50000\n        },\n        {\n            \"description\": \"Final Review & Launch\",\n            \"amount\": 20000\n        }\n    ]\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/escrow/create",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "escrow",
+                                "create"
+                            ]
+                        },
+                        "description": "Initializes an Escrow Transaction with defined **Milestones**.\n\n**Rules:**\n*   `request.body.milestones` is an array.\n*   The sum of `amount` in all milestones MUST equal the total transaction `amount`."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Escrow Status",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/escrow/{{transaction_id}}",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "escrow",
+                                "{{transaction_id}}"
+                            ]
+                        },
+                        "description": "Retrieves the current details and status of a specific transaction."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Release Escrow (Full)",
+                    "request": {
+                        "method": "POST",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/escrow/{{transaction_id}}/release",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "escrow",
+                                "{{transaction_id}}",
+                                "release"
+                            ]
+                        },
+                        "description": "Releases the full amount (minus fees) to the Vendor's available wallet balance.\n\n**Prerequisites:**\n*   Transaction status must be `FUNDS_HELD`.\n\n**Effect:**\n*   Updates status to `RELEASED`.\n*   Credits Vendor's wallet.\n*   Triggers `escrow.released` webhook."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Release Shipping (Partial)",
+                    "request": {
+                        "method": "POST",
+                        "header": [],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"shipping_amount\": 2000\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/escrow/{{transaction_id}}/release-shipping",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "escrow",
+                                "{{transaction_id}}",
+                                "release-shipping"
+                            ]
+                        },
+                        "description": "Releases a partial amount specifically for shipping costs to the Vendor upfront.\n\n**Body Parameters:**\n*   `shipping_amount`: Amount to release.\n\n**Effect:**\n*   Deducts from Escrow Balance, Adds to Available Balance.\n*   Triggers Paystack transfer if Vendor has a bank account linked."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Refund Escrow",
+                    "request": {
+                        "method": "POST",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/escrow/{{transaction_id}}/refund",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "escrow",
+                                "{{transaction_id}}",
+                                "refund"
+                            ]
+                        },
+                        "description": "Refunds the transaction amount to the Buyer.\n\n**Prerequisites:**\n*   Status must be `FUNDS_HELD` or `DISPUTED`.\n\n**Effect:**\n*   Updates status to `REFUNDED`.\n*   (Production) Triggers reversal via payment gateway."
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "Webhooks",
+            "description": "Tools for testing and simulating Webhooks.",
+            "item": [
+                {
+                    "name": "Simulate Paystack Webhook (Fund Escrow)",
+                    "event": [
+                        {
+                            "listen": "prerequest",
+                            "script": {
+                                "exec": [
+                                    "const crypto = require('crypto-js');",
+                                    "const secret = pm.environment.get(\"paystack_secret_key\") || \"YOUR_SECRET_KEY\";",
+                                    "const body = pm.request.body.raw;",
+                                    "",
+                                    "// Calculate HMAC SHA512 signature",
+                                    "const signature = crypto.HmacSHA512(body, secret).toString(crypto.enc.Hex);",
+                                    "",
+                                    "// Set header",
+                                    "pm.request.headers.add({key: \"x-paystack-signature\", value: signature});",
+                                    "console.log(\"Generated Signature for Webhook:\", signature);"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"event\": \"charge.success\",\n    \"data\": {\n        \"reference\": \"{{transaction_id}}\",\n        \"amount\": 5000000,\n        \"status\": \"success\",\n        \"gateway_response\": \"Successful\",\n        \"channel\": \"card\"\n    }\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/webhook/paystack",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "webhook",
+                                "paystack"
+                            ]
+                        },
+                        "description": "Simulates an incoming Paystack `charge.success` webhook event to test the funding flow.\n\n**Script Automation:**\nThis request includes a **Pre-request Script** that automatically calculates the valid `x-paystack-signature` using the `paystack_secret_key` variable and the request body.\n\n**Usage:**\n1.  Ensure you have a transaction in `AWAITING_FUNDS` state.\n2.  Set `{{transaction_id}}` to that transaction's ID.\n3.  Send this request.\n4.  The transaction status should update to `FUNDS_HELD`."
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "Milestones",
+            "description": "Manage milestone-based transactions.",
+            "item": [
+                {
+                    "name": "Get Milestones",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/escrow/{{transaction_id}}/milestones",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "escrow",
+                                "{{transaction_id}}",
+                                "milestones"
+                            ]
+                        },
+                        "description": "List all milestones associated with a specific transaction."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Complete Milestone",
+                    "request": {
+                        "method": "PATCH",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/escrow/{{transaction_id}}/milestones/{{milestone_id}}/complete",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "escrow",
+                                "{{transaction_id}}",
+                                "milestones",
+                                "{{milestone_id}}",
+                                "complete"
+                            ]
+                        },
+                        "description": "Marks a specific milestone as complete, potentially releasing a portion of funds."
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "Disputes",
+            "description": "Handle dispute resolution and evidence.",
+            "item": [
+                {
+                    "name": "Initiate Dispute",
+                    "request": {
+                        "method": "POST",
+                        "header": [],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"transaction_id\": \"{{transaction_id}}\",\n    \"reason\": \"Item was broken on arrival\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/dispute/initiate",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "dispute",
+                                "initiate"
+                            ]
+                        },
+                        "description": "Opens a dispute for a transaction.\n\n**Effect:**\n*   Sets transaction status to `DISPUTED`.\n*   Freezes funds."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Upload Evidence",
+                    "request": {
+                        "method": "POST",
+                        "header": [],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"evidence_url\": \"https://s3.aws.com/evidence/video.mp4\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/dispute/{{dispute_id}}/upload",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "dispute",
+                                "{{dispute_id}}",
+                                "upload"
+                            ]
+                        },
+                        "description": "Attach evidence (images/videos) to an active dispute."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Dispute History",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/dispute/{{dispute_id}}/history",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "dispute",
+                                "{{dispute_id}}",
+                                "history"
+                            ]
+                        },
+                        "description": "View the history and logs of a specific dispute."
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "Vendor Wallet",
+            "description": "Manage vendor funds and withdrawals.",
+            "item": [
+                {
+                    "name": "Get Ledger",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/vendor/{{vendor_id}}/ledger",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "vendor",
+                                "{{vendor_id}}",
+                                "ledger"
+                            ]
+                        },
+                        "description": "Retrieves the wallet balance for a vendor.\n\n**Returns:**\n*   `escrow_balance`: Funds currently locked in active escrows.\n*   `available_balance`: Funds available for withdrawal."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Add Bank Account",
+                    "request": {
+                        "method": "POST",
+                        "header": [],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"bank_code\": \"058\",\n    \"account_number\": \"0123456789\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/vendor/{{vendor_id}}/bank-accounts",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "vendor",
+                                "{{vendor_id}}",
+                                "bank-accounts"
+                            ]
+                        },
+                        "description": "Adds a NUBAN bank account for withdrawals.\n\n**Validation:**\nAutomatically verifies the account name via Paystack."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Withdraw Funds",
+                    "request": {
+                        "method": "POST",
+                        "header": [],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"amount\": 5000\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/vendor/{{vendor_id}}/withdraw",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "vendor",
+                                "{{vendor_id}}",
+                                "withdraw"
+                            ]
+                        },
+                        "description": "Initiates a withdrawal from `available_balance` to the linked bank account."
+                    },
+                    "response": []
+                }
+            ]
+        }
+    ],
+    "event": [
+        {
+            "listen": "prerequest",
+            "script": {
+                "type": "text/javascript",
+                "exec": [
+                    ""
+                ]
+            }
+        },
+        {
+            "listen": "test",
+            "script": {
+                "type": "text/javascript",
+                "exec": [
+                    ""
+                ]
+            }
+        }
+    ],
+    "variable": [
+        {
+            "key": "base_url",
+            "value": "http://localhost:3000/v1",
+            "type": "string"
+        },
+        {
+            "key": "tenant_id",
+            "value": "YOUR_TENANT_ID",
+            "type": "string"
+        },
+        {
+            "key": "transaction_id",
+            "value": "YOUR_TX_ID",
+            "type": "string"
+        },
+        {
+            "key": "vendor_id",
+            "value": "YOUR_VENDOR_ID",
+            "type": "string"
+        },
+        {
+            "key": "buyer_id",
+            "value": "YOUR_BUYER_ID",
+            "type": "string"
+        },
+        {
+            "key": "dispute_id",
+            "value": "YOUR_DISPUTE_ID",
+            "type": "string"
+        },
+        {
+            "key": "milestone_id",
+            "value": "YOUR_MILESTONE_ID",
+            "type": "string"
+        },
+        {
+            "key": "paystack_secret_key",
+            "value": "YOUR_PAYSTACK_SECRET_KEY",
+            "type": "string"
+        }
+    ]
+}
