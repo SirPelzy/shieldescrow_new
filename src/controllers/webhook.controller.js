@@ -5,7 +5,7 @@ const webhookSender = require('../services/webhook_sender.service');
 exports.handleWebhook = async (req, res) => {
     // 1. Validate Signature
     const signature = req.headers['x-paystack-signature'];
-    const isValid = paystackService.verifySignature(signature, req.body);
+    const isValid = paystackService.verifySignature(signature, req.rawBody);
 
     if (!isValid) {
         return res.status(401).send('Invalid Signature');

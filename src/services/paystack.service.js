@@ -81,7 +81,7 @@ class PaystackService {
     verifySignature(signature, body) {
         const hash = crypto
             .createHmac('sha512', config.PAYSTACK_SECRET_KEY)
-            .update(JSON.stringify(body))
+            .update(body)
             .digest('hex');
         return hash === signature;
     }
