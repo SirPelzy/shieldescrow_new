@@ -76,6 +76,23 @@ class PaystackService {
     }
 
     /**
+     * Create Paystack Customer
+     */
+    async createCustomer(email, first_name, last_name, phone) {
+        try {
+            const response = await paystack.post('/customer', {
+                email,
+                first_name,
+                last_name,
+                phone
+            });
+            return response.data.data;
+        } catch (error) {
+            throw new Error(`Create customer failed: ${error.response?.data?.message || error.message}`);
+        }
+    }
+
+    /**
      * Verify Webhook Signature
      */
     verifySignature(signature, body) {

@@ -17,6 +17,7 @@ CREATE TABLE users (
     platform_user_id VARCHAR(255) NOT NULL, -- User ID from Jiji/etc
     email VARCHAR(255),
     role VARCHAR(50) CHECK (role IN ('buyer', 'vendor', 'admin')),
+    paystack_customer_code VARCHAR(100), -- For DVA creation
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     UNIQUE(tenant_id, platform_user_id)
 );
@@ -40,6 +41,8 @@ CREATE TABLE wallets (
     escrow_balance DECIMAL(15, 2) DEFAULT 0.00, -- Locked funds
     available_balance DECIMAL(15, 2) DEFAULT 0.00, -- Release funds
     withdrawn_balance DECIMAL(15, 2) DEFAULT 0.00, -- Historical payouts
+    virtual_account_number VARCHAR(20), -- DVA for funding
+    virtual_bank_name VARCHAR(100), -- DVA Bank Name
     currency VARCHAR(3) DEFAULT 'NGN',
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );

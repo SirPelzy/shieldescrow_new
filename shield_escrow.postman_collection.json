@@ -64,7 +64,27 @@
                         },
                         "description": "Explicitly creates a user.\n\n**Note**: You usually don't need this. `Create Escrow` creates users automatically if they don't exist."
                     },
-                    "response": []
+                    "response": [],
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "var jsonData = pm.response.json();",
+                                    "if (jsonData.status === 'success' && jsonData.data) {",
+                                    "    if (jsonData.data.role === 'buyer') {",
+                                    "        pm.collectionVariables.set('buyer_platform_id', jsonData.data.platform_user_id);",
+                                    "        pm.collectionVariables.set('buyer_email', jsonData.data.email);",
+                                    "    } else if (jsonData.data.role === 'vendor') {",
+                                    "        pm.collectionVariables.set('vendor_platform_id', jsonData.data.platform_user_id);",
+                                    "        pm.collectionVariables.set('vendor_email', jsonData.data.email);",
+                                    "    }",
+                                    "}"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ]
                 },
                 {
                     "name": "Rotate Keys",
@@ -152,7 +172,22 @@
                         },
                         "description": "Initializes a basic Escrow Transaction."
                     },
-                    "response": []
+                    "response": [],
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "var jsonData = pm.response.json();",
+                                    "if (jsonData.status === 'success' && jsonData.data && jsonData.data.id) {",
+                                    "    pm.collectionVariables.set('transaction_id', jsonData.data.id);",
+                                    "    console.log('Transaction ID Saved:', jsonData.data.id);",
+                                    "}"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ]
                 },
                 {
                     "name": "Create Escrow (with Milestones)",
@@ -565,7 +600,7 @@
     "variable": [
         {
             "key": "base_url",
-            "value": "http://localhost:3000/v1",
+            "value": "https://shieldescrow.live/v1",
             "type": "string"
         },
         {

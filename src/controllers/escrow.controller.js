@@ -53,11 +53,46 @@ exports.createEscrow = async (req, res) => {
 
             // 3. Create Transaction Record
             const [transaction] = await sql`
-                INSERT INTO transactions 
-                (tenant_id, buyer_id, vendor_id, amount, protection_fee, status, description)
                 VALUES (${tenant_id}, ${buyer_id}, ${vendor_id}, ${amount}, ${protectionFee}, 'AWAITING_FUNDS', ${description})
                 RETURNING *
             `;
+
+            // 3b. Fetch or Generate Buyer's DVA
+            let [buyerWallet] = await sql`SELECT virtual_account_number, virtual_bank_name FROM wallets WHERE user_id = ${buyer_id}`;
+
+            if (!buyerWallet?.virtual_account_number) {
+                // JIT Generation
+                try {
+                    // Fetch full user details to create customer
+                    const [buyerUser] = await sql`SELECT email, paystack_customer_code, platform_user_id FROM users WHERE id = ${buyer_id}`;
+
+                    let customerCode = buyerUser.paystack_customer_code;
+                    if (!customerCode) {
+                        const customer = await paystackService.createCustomer(
+                            buyerUser.email || `buyer-${buyer_id}@temp.com`,
+                            'Escrow',
+                            'Buyer',
+                            '+2340000000000'
+                        );
+                        customerCode = customer.customer_code;
+                        await sql`UPDATE users SET paystack_customer_code = ${customerCode} WHERE id = ${buyer_id}`;
+                    }
+
+                    const dva = await paystackService.createDedicatedVirtualAccount(customerCode, 'wema-bank');
+
+                    // Update Wallet
+                    await sql`
+                        UPDATE wallets 
+                        SET virtual_account_number = ${dva.account_number}, virtual_bank_name = ${dva.bank.name} 
+                        WHERE user_id = ${buyer_id}
+                    `;
+
+                    buyerWallet = { virtual_account_number: dva.account_number, virtual_bank_name: dva.bank.name };
+
+                } catch (e) {
+                    console.error('JIT DVA Generation Failed:', e.message);
+                }
+            }
 
             // 4. Create Milestones (if provided)
             let createdMilestones = [];
@@ -84,6 +119,11 @@ exports.createEscrow = async (req, res) => {
             res.status(201).json({
                 status: 'success',
                 data: transaction,
+                payment_info: {
+                    bank_name: buyerWallet?.virtual_bank_name,
+                    account_number: buyerWallet?.virtual_account_number,
+                    instruction: `Transfer ${amount} to this account to fund the escrow.`
+                },
                 message: 'Escrow transaction created. Proceed to payment.'
             });
         });

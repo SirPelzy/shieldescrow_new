@@ -7,6 +7,14 @@ exports.handleWebhook = async (req, res) => {
     const signature = req.headers['x-paystack-signature'];
     const isValid = paystackService.verifySignature(signature, req.rawBody);
 
+    // Debug Logging
+    console.log('--- Webhook Debug ---');
+    console.log('Headers Signature:', signature);
+    console.log('Raw Body Type:', typeof req.rawBody);
+    console.log('Raw Body (String):', req.rawBody ? req.rawBody.toString() : 'undefined');
+    console.log('Is Valid:', isValid);
+    console.log('---------------------');
+
     if (!isValid) {
         return res.status(401).send('Invalid Signature');
     }
