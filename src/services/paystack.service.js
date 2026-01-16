@@ -100,6 +100,15 @@ class PaystackService {
             .createHmac('sha512', config.PAYSTACK_SECRET_KEY)
             .update(body)
             .digest('hex');
+
+        // Debug Log (Temporary)
+        if (hash !== signature) {
+            console.log('--- Signature Mismatch ---');
+            console.log('Received:', signature);
+            console.log('Calculated:', hash);
+            console.log('--------------------------');
+        }
+
         return hash === signature;
     }
 }
