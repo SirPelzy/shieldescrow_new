@@ -10,6 +10,15 @@ const paystack = axios.create({
     },
 });
 
+// STARTUP DEBUG: Check what key is actually loaded
+const key = config.PAYSTACK_SECRET_KEY || '';
+console.log('--- PAYSTACK KEY DEBUG ---');
+console.log('Key Exists?', !!key);
+console.log('Key Length:', key.length);
+console.log('Key Start:', key.substring(0, 8) + '...');
+console.log('Key End:', '...' + key.substring(key.length - 4));
+console.log('--------------------------');
+
 // Debug Interceptor
 paystack.interceptors.response.use(
     response => response,
