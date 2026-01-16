@@ -53,6 +53,8 @@ exports.createEscrow = async (req, res) => {
 
             // 3. Create Transaction Record
             const [transaction] = await sql`
+                INSERT INTO transactions 
+                (tenant_id, buyer_id, vendor_id, amount, protection_fee, status, description)
                 VALUES (${tenant_id}, ${buyer_id}, ${vendor_id}, ${amount}, ${protectionFee}, 'AWAITING_FUNDS', ${description})
                 RETURNING *
             `;
