@@ -10,6 +10,21 @@ const paystack = axios.create({
     },
 });
 
+// Debug Interceptor
+paystack.interceptors.response.use(
+    response => response,
+    error => {
+        console.error('Paystack API Error:', {
+            url: error.config?.url,
+            method: error.config?.method,
+            status: error.response?.status,
+            data: error.response?.data,
+            message: error.message
+        });
+        return Promise.reject(error);
+    }
+);
+
 class PaystackService {
     /**
      * Verify a NUBAN account number
