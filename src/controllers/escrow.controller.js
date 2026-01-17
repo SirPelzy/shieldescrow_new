@@ -59,41 +59,33 @@ exports.createEscrow = async (req, res) => {
                 RETURNING *
             `;
 
-            // 3b. Fetch or Generate Buyer's DVA
-            let [buyerWallet] = await sql`SELECT virtual_account_number, virtual_bank_name FROM wallets WHERE user_id = ${buyer_id}`;
+            // 3b. Initialize Paystack Checkout
+            let paymentData;
+            try {
+                // Determine Buyer Email
+                const [buyerUser] = await sql`SELECT email, platform_user_id FROM users WHERE id = ${buyer_id}`;
+                const emailToUse = buyerUser.email || buyer_email || `buyer-${buyer_id}@shieldescrow.com`;
 
-            if (!buyerWallet?.virtual_account_number) {
-                // JIT Generation
-                try {
-                    // Fetch full user details to create customer
-                    const [buyerUser] = await sql`SELECT email, paystack_customer_code, platform_user_id FROM users WHERE id = ${buyer_id}`;
+                // Initialize Transaction
+                // We use the Transaction ID as the reference for easy lookup
+                const reference = transaction.id;
 
-                    let customerCode = buyerUser.paystack_customer_code;
-                    if (!customerCode) {
-                        const customer = await paystackService.createCustomer(
-                            buyerUser.email || `buyer-${buyer_id}@temp.com`,
-                            'Escrow',
-                            'Buyer',
-                            '+2340000000000'
-                        );
-                        customerCode = customer.customer_code;
-                        await sql`UPDATE users SET paystack_customer_code = ${customerCode} WHERE id = ${buyer_id}`;
-                    }
+                // You might want to get this from env/config
+                const callbackUrl = 'https://your-frontend.com/payment-callback';
 
-                    const dva = await paystackService.createDedicatedVirtualAccount(customerCode, 'wema-bank');
+                paymentData = await paystackService.initializeTransaction(
+                    emailToUse,
+                    amount,
+                    reference,
+                    callbackUrl
+                );
 
-                    // Update Wallet
-                    await sql`
-                        UPDATE wallets 
-                        SET virtual_account_number = ${dva.account_number}, virtual_bank_name = ${dva.bank.name} 
-                        WHERE user_id = ${buyer_id}
-                    `;
+                // Update Transaction with Paystack Reference (redundant but good for querying)
+                await sql`UPDATE transactions SET paystack_reference = ${paymentData.reference} WHERE id = ${transaction.id}`;
 
-                    buyerWallet = { virtual_account_number: dva.account_number, virtual_bank_name: dva.bank.name };
-
-                } catch (e) {
-                    console.error('JIT DVA Generation Failed:', e.message);
-                }
+            } catch (e) {
+                console.error('Paystack Initialization Failed:', e.message);
+                throw new Error('Failed to generate payment link: ' + e.message);
             }
 
             // 4. Create Milestones (if provided)
@@ -122,9 +114,10 @@ exports.createEscrow = async (req, res) => {
                 status: 'success',
                 data: transaction,
                 payment_info: {
-                    bank_name: buyerWallet?.virtual_bank_name,
-                    account_number: buyerWallet?.virtual_account_number,
-                    instruction: `Transfer ${amount} to this account to fund the escrow.`
+                    authorization_url: paymentData.authorization_url,
+                    access_code: paymentData.access_code,
+                    reference: paymentData.reference,
+                    instruction: `Click the link to pay ${amount} to fund the escrow.`
                 },
                 message: 'Escrow transaction created. Proceed to payment.'
             });

@@ -117,6 +117,25 @@ class PaystackService {
     }
 
     /**
+     * Initialize Transaction (Checkout)
+     */
+    async initializeTransaction(email, amount, reference, callback_url) {
+        try {
+            // Amount is in kobo, so multiply NGN by 100
+            const response = await paystack.post('/transaction/initialize', {
+                email,
+                amount: Math.round(amount * 100),
+                reference,
+                callback_url,
+                channels: ['card', 'bank', 'ussd', 'qr', 'mobile_money']
+            });
+            return response.data.data;
+        } catch (error) {
+            throw new Error(`Transaction initialization failed: ${error.response?.data?.message || error.message}`);
+        }
+    }
+
+    /**
      * Verify Webhook Signature
      */
     verifySignature(signature, body) {

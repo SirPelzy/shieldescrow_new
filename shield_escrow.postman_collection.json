@@ -153,7 +153,7 @@
                         "header": [],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\n    \"tenant_id\": \"{{tenant_id}}\",\n    \"buyer_platform_id\": \"USER_BUYER_001\",\n    \"buyer_email\": \"buyer@example.com\",\n    \"vendor_platform_id\": \"USER_VENDOR_001\",\n    \"vendor_email\": \"vendor@example.com\",\n    \"amount\": 50000,\n    \"description\": \"iPhone 13 Pro Max - Mint Condition\"\n}",
+                            "raw": "{\n    \"tenant_id\": \"{{tenant_id}}\",\n    \"buyer_platform_id\": \"USER_BUYER_001\",\n    \"buyer_email\": \"buyer@example.com\",\n    \"vendor_platform_id\": \"USER_VENDOR_001\",\n    \"vendor_email\": \"vendor@example.com\",\n    \"amount\": 100,\n    \"description\": \"Test Transaction\"\n}",
                             "options": {
                                 "raw": {
                                     "language": "json"
@@ -338,7 +338,7 @@
                         "header": [],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\n    \"event\": \"charge.success\",\n    \"data\": {\n        \"reference\": \"{{transaction_id}}\",\n        \"amount\": 5000000,\n        \"status\": \"success\",\n        \"gateway_response\": \"Successful\",\n        \"channel\": \"card\"\n    }\n}",
+                            "raw": "{\n    \"event\": \"charge.success\",\n    \"data\": {\n        \"reference\": \"{{transaction_id}}\",\n        \"amount\": 10000,\n        \"status\": \"success\",\n        \"gateway_response\": \"Successful\",\n        \"channel\": \"card\"\n    }\n}",
                             "options": {
                                 "raw": {
                                     "language": "json"
